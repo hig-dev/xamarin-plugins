@@ -183,3 +183,4 @@ UpgradeLog*.htm
 FakesAssemblies/
 DeviceMotion/.DS_Store
 *.DS_Store
+/PushNotification/.vs/PushNotification/v15/Server/sqlite3
