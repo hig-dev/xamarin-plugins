@@ -24,6 +24,7 @@ namespace PushNotification.Plugin
     [IntentFilter(new string[] { "com.google.android.c2dm.intent.RECEIVE" }, Categories = new string[] { "@PACKAGE_NAME@" })]
     public class PushNotificationGcmListener : GcmListenerService
     {
+        private const string ChannelId = "CrossPushNotification_MainNotificationChannel";
         /// <summary>
         /// Called when message is received.
         /// </summary>
@@ -240,6 +241,16 @@ namespace PushNotification.Plugin
                 System.Diagnostics.Debug.WriteLine(ex.ToString());
             }
 
+            NotificationManager notificationManager = (NotificationManager)context.GetSystemService(Context.NotificationService);
+
+            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.O && notificationManager.GetNotificationChannel(ChannelId) == null)
+            {
+                NotificationChannel mChannel = new NotificationChannel(ChannelId, "General", NotificationImportance.Default);
+                mChannel.EnableVibration(true);
+                mChannel.SetShowBadge(true);
+                mChannel.LockscreenVisibility = NotificationVisibility.Public;
+                notificationManager.CreateNotificationChannel(mChannel);
+            }
 
             Intent resultIntent = context.PackageManager.GetLaunchIntentForPackage(context.PackageName);
 
@@ -251,13 +262,14 @@ namespace PushNotification.Plugin
             const int pendingIntentId = 0;
             PendingIntent resultPendingIntent = PendingIntent.GetActivity(context, pendingIntentId, resultIntent, PendingIntentFlags.OneShot | PendingIntentFlags.UpdateCurrent);
             // Build the notification
-            builder = new NotificationCompat.Builder(context)
-                      .SetAutoCancel(true) // dismiss the notification from the notification area when the user clicks on it
-                      .SetContentIntent(resultPendingIntent) // start up this activity when the user clicks the intent.
-                      .SetContentTitle(title) // Set the title
-                      .SetSound(CrossPushNotification.SoundUri)
-                      .SetSmallIcon(CrossPushNotification.IconResource) // This is the icon to display
-                      .SetContentText(message); // the message to display.
+            builder = new NotificationCompat.Builder(context, ChannelId)
+                .SetAutoCancel(true) // dismiss the notification from the notification area when the user clicks on it
+                .SetContentIntent(resultPendingIntent) // start up this activity when the user clicks the intent.
+                .SetContentTitle(title) // Set the title
+                .SetSound(CrossPushNotification.SoundUri)
+                .SetSmallIcon(CrossPushNotification.IconResource) // This is the icon to display
+                .SetContentText(message) // the message to display.
+                .SetChannelId(ChannelId);
 
             if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.JellyBean)
             {
@@ -267,7 +279,8 @@ namespace PushNotification.Plugin
                 builder.SetStyle(style);
             }
 
-            NotificationManager notificationManager = (NotificationManager)context.GetSystemService(Context.NotificationService);
+            
+
             notificationManager.Notify(tag, notifyId, builder.Build());
 
         }
