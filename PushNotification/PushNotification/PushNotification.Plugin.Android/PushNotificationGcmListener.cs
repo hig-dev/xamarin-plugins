@@ -63,7 +63,7 @@ namespace PushNotification.Plugin
 
                 Context context = Android.App.Application.Context;
 
-                CrossPushNotification.PushNotificationListener.OnMessage(values, DeviceType.Android);
+                CrossPushNotification.PushNotificationListener?.OnMessage(values, DeviceType.Android);
 
                 try
                 {

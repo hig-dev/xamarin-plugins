@@ -11,20 +11,32 @@ using Android.Views;
 using Android.Widget;
 using Android.Gms.Iid;
 using Android.Gms.Gcm;
+using Android.Support.V4.App;
 using PushNotification.Plugin.Abstractions;
 using Android.Support.V4.Content;
 
 namespace PushNotification.Plugin
 {
-    [Service(Exported = false)]
-    public class PushNotificationRegistrationIntentService : IntentService
+    [Service(Exported = false, Permission = "android.permission.BIND_JOB_SERVICE")]
+    public class PushNotificationRegistrationIntentService : JobIntentService
     {
-
+        private static int JobId = 1000;
         const string Tag = "PushNotificationRegistationIntentService";
         private string[] Topics = new string[] { "global" };
         private readonly object syncLock = new object();
-
-        protected override void OnHandleIntent(Intent intent)
+        public static void EnqueueWork(Context context, Intent work)
+        {
+            Java.Lang.Class cls = Java.Lang.Class.FromType(typeof(PushNotificationRegistrationIntentService));
+            try
+            {
+                EnqueueWork(context, cls, JobId, work);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception: {0}", ex.Message);
+            }
+        }
+        protected override void OnHandleWork(Intent intent)
         {
             try
             {
@@ -60,14 +72,14 @@ namespace PushNotification.Plugin
             {
                 System.Diagnostics.Debug.WriteLine($"{ex.Message} - Error : {Tag}");
 
-                CrossPushNotification.PushNotificationListener.OnError($"{ex.ToString()} - Register - {Tag}", DeviceType.Android);
+                CrossPushNotification.PushNotificationListener.OnError($"{ex.ToString()} - Register - {Tag}",
+                    DeviceType.Android);
 
 
             }
 
             // Intent registrationComplete = new Intent(PushNotificationKey.RegistrationComplete);
             // LocalBroadcastManager.GetInstance(Android.App.Application.Context).SendBroadcast(registrationComplete);
-
         }
 
         private void SubscribeTopics(string token)
@@ -79,5 +91,7 @@ namespace PushNotification.Plugin
                 pubSub.Subscribe(token, "/topics/" + topic, null);
             }
         }
+
+
     }
 }

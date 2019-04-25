@@ -34,7 +34,7 @@ namespace PushNotification.Plugin
                 try
                 {
                     Intent intent = new Intent(Android.App.Application.Context, typeof(PushNotificationRegistrationIntentService));
-                    Android.App.Application.Context.StartService(intent);
+                    PushNotificationRegistrationIntentService.EnqueueWork(Android.App.Application.Context, intent);
                 }
                 catch (System.Exception ex)
                 {
